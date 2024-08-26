@@ -19,6 +19,12 @@ for FASTQ_FILE in ${FASTQ_DIR}*_1.fastq; do
     
     # 定义输出的SAM文件名
     OUTPUT_SAM="${OUTPUT_DIR}${BASE_NAME}.sam"
+
+# 检查SAM文件是否已经存在
+    if [ -f "${OUTPUT_SAM}" ]; then
+        echo "SAM file ${OUTPUT_SAM} already exists, skipping..."
+        continue
+    fi
     
     # 运行HISAT2进行比对
     hisat2 -x ${HISAT_INDEX} -1 ${FASTQ1} -2 ${FASTQ2} -S ${OUTPUT_SAM} --dta -t
