@@ -1,3 +1,29 @@
 tar -xzvf /smartseq/mm10_genome.tar.gz
 tar -xzvf ./smartseq/mm10_genome.tar.gz -C ./smartseq/
 hisat2 --dta -t -x ./smartseq/mm10/genome -1 ./SRR18472352_1.fastq.gz -2 ./SRR18472352_2.fastq.gz -S ./smartseq/hisat/CK4.sam 
+#!/bin/bash
+
+# 设置FASTQ文件目录和输出目录
+FASTQ_DIR="./"
+OUTPUT_DIR="./smartseq/hisat/"
+HISAT_INDEX="./smartseq/mm10/genome"
+
+# 遍历FASTQ文件目录中的每个单元格文件
+for FASTQ_FILE in ${FASTQ_DIR}*_1.fastq; do
+    # 获取不含路径和文件后缀的文件名
+    BASE_NAME=$(basename ${FASTQ_FILE} _1.fastq)
+    
+    # 定义匹配的配对FASTQ文件名
+    FASTQ1="${FASTQ_DIR}${BASE_NAME}_1.fastq"
+    FASTQ2="${FASTQ_DIR}${BASE_NAME}_2.fastq"
+    
+    # 定义输出的SAM文件名
+    OUTPUT_SAM="${OUTPUT_DIR}${BASE_NAME}.sam"
+    
+    # 运行HISAT2进行比对
+    hisat2 -x ${HISAT_INDEX} -1 ${FASTQ1} -2 ${FASTQ2} -S ${OUTPUT_SAM} --dta -t
+    
+    echo "Processed ${BASE_NAME} and generated ${OUTPUT_SAM}"
+done
+
+echo "All files have been processed."
