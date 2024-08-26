@@ -1,0 +1,3 @@
+tar -xzvf /smartseq/mm10_genome.tar.gz
+tar -xzvf ./smartseq/mm10_genome.tar.gz -C ./smartseq/
+hisat2 --dta -t -x ./smartseq/mm10/genome -1 ./SRR18472352_1.fastq.gz -2 ./SRR18472352_2.fastq.gz -S ./smartseq/hisat/CK4.sam 
