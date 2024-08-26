@@ -9,13 +9,13 @@ OUTPUT_DIR="./smartseq/hisat/"
 HISAT_INDEX="./smartseq/mm10/genome"
 
 # 遍历FASTQ文件目录中的每个单元格文件
-for FASTQ_FILE in ${FASTQ_DIR}*_1.fastq; do
+for FASTQ_FILE in ${FASTQ_DIR}*_1.fastq.gz; do
     # 获取不含路径和文件后缀的文件名
-    BASE_NAME=$(basename ${FASTQ_FILE} _1.fastq)
+    BASE_NAME=$(basename ${FASTQ_FILE} _1.fastq.gz)
     
     # 定义匹配的配对FASTQ文件名
-    FASTQ1="${FASTQ_DIR}${BASE_NAME}_1.fastq"
-    FASTQ2="${FASTQ_DIR}${BASE_NAME}_2.fastq"
+    FASTQ1="${FASTQ_DIR}${BASE_NAME}_1.fastq.gz"
+    FASTQ2="${FASTQ_DIR}${BASE_NAME}_2.fastq.gz"
     
     # 定义输出的SAM文件名
     OUTPUT_SAM="${OUTPUT_DIR}${BASE_NAME}.sam"
