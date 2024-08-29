@@ -42,7 +42,6 @@ echo "All files have been processed."
 SAM_DIR="./smartseq/hisat/"
 BAM_DIR="./smartseq/bam/"
 
-
 # 遍历输入目录中的每个SAM文件
 for SAM_FILE in ${SAM_DIR}*.sam; do
     # 获取不含路径和文件后缀的文件名
@@ -52,9 +51,9 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
     OUTPUT_BAM="${BAM_DIR}${BASE_NAME}.bam"
     SORTED_BAM_FILE="${BAM_DIR}${BASE_NAME}_sorted.bam"
     
-    # 检查BAM文件是否已经存在
-    if [ -f "${OUTPUT_BAM}" ]; then
-        echo "BAM file ${OUTPUT_BAM} already exists, skipping..."
+    # 检查排序后的BAM文件是否已经存在
+    if [ -f "${SORTED_BAM_FILE}" ]; then
+        echo "Sorted BAM file ${SORTED_BAM_FILE} already exists, skipping..."
         continue
     fi
     
@@ -62,13 +61,15 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
     echo "Converting ${SAM_FILE} to ${OUTPUT_BAM}..."
     samtools view -S -b ${SAM_FILE} > ${OUTPUT_BAM}
 
-    # 排序 BAM 文件
-    samtools sort ${BAM_FILE} -o ${SORTED_BAM_FILE}
+    # 排序BAM文件
+    echo "Sorting ${OUTPUT_BAM} to ${SORTED_BAM_FILE}..."
+    samtools sort ${OUTPUT_BAM} -o ${SORTED_BAM_FILE}
 
-    # 创建 BAM 文件索引
+    # 创建BAM文件索引
+    echo "Indexing ${SORTED_BAM_FILE}..."
     samtools index ${SORTED_BAM_FILE}
     
-    echo "Converted to BAM, sorted, and indexed."
+    echo "Converted ${SAM_FILE} to BAM, sorted, and indexed."
 done
 
-echo "All SAM files have been converted to BAM files."
+echo "All SAM files have been converted to sorted and indexed BAM files."
