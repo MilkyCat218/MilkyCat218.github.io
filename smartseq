@@ -35,6 +35,7 @@ done
 echo "All files have been processed."
 
 
+sam转bam：
 
 #!/bin/bash
 
