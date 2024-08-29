@@ -48,8 +48,9 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
     # 获取不含路径和文件后缀的文件名
     BASE_NAME=$(basename ${SAM_FILE} .sam)
     
-    # 定义输出的BAM文件名
+    # 定义输出的BAM文件名和排序后的BAM文件名
     OUTPUT_BAM="${BAM_DIR}${BASE_NAME}.bam"
+    SORTED_BAM_FILE="${BAM_DIR}${BASE_NAME}_sorted.bam"
     
     # 检查BAM文件是否已经存在
     if [ -f "${OUTPUT_BAM}" ]; then
@@ -60,8 +61,14 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
     # 转换SAM为BAM
     echo "Converting ${SAM_FILE} to ${OUTPUT_BAM}..."
     samtools view -S -b ${SAM_FILE} > ${OUTPUT_BAM}
+
+    # 排序 BAM 文件
+    samtools sort ${BAM_FILE} -o ${SORTED_BAM_FILE}
+
+    # 创建 BAM 文件索引
+    samtools index ${SORTED_BAM_FILE}
     
-    echo "Finished processing ${BASE_NAME}"
+    echo "Converted to BAM, sorted, and indexed."
 done
 
 echo "All SAM files have been converted to BAM files."
