@@ -74,3 +74,11 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
 done
 
 echo "All SAM files have been converted to sorted and indexed BAM files."
+
+安装feature counts
+wget https://jaist.dl.sourceforge.net/project/subread/subread-1.6.2/subread-1.6.2-Linux-x86_64.tar.gz
+tar -zxvf  subread-1.6.2-Linux-x86_64.tar.gz
+cd subread-1.6.2-Linux-x86_64/bin
+./featureCounts -h
+
+
