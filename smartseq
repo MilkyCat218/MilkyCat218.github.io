@@ -82,3 +82,24 @@ cd subread-1.6.2-Linux-x86_64/bin
 ./featureCounts -h
 
 
+#featurecounts运行
+
+#!/bin/bash
+
+# 设置BAM文件目录和输出目录
+BAM_DIR="./smartseq/bam/"
+OUTPUT_DIR="./smartseq/featurecounts/"
+GTF_FILE="./genome.gtf"
+
+# 运行featureCounts对BAM文件进行计数
+featureCounts \
+    -T 16 \
+    -p \
+    -t exon \
+    -g gene_id \
+    -a ${GTF_FILE} \
+    -o ${OUTPUT_DIR}all_feature.txt \
+    ${BAM_DIR}*.bam
+
+echo "FeatureCounts processing complete. Results are saved in ${OUTPUT_DIR}counts.txt"
+
