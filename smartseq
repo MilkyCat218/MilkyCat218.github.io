@@ -89,7 +89,7 @@ cd subread-1.6.2-Linux-x86_64/bin
 # 设置BAM文件目录和输出目录
 BAM_DIR="./smartseq/bam/"
 OUTPUT_DIR="./smartseq/featurecounts/"
-GTF_FILE="./genome.gtf"
+GTF_FILE="./genomic.gtf"
 
 # 运行featureCounts对BAM文件进行计数
 featureCounts \
