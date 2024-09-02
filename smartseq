@@ -111,4 +111,38 @@ featureCounts \
     ${BAM_FILES}
 echo "FeatureCounts processing complete. Results are saved in ${OUTPUT_DIR}all_feature.txt"
 
+删除之前的文件
+rm ./smartseq/bam/*_sorted.bam
+
+
+
+重新分类索引
+#!/bin/bash
+
+# 设置SAM文件的输入目录和BAM文件的输出目录
+SAM_DIR="./smartseq/hisat/"
+BAM_DIR="./smartseq/bam/"
+
+# 遍历输入目录中的每个SAM文件
+for SAM_FILE in ${SAM_DIR}*.sam; do
+    # 获取不含路径和文件后缀的文件名
+    BASE_NAME=$(basename ${SAM_FILE} .sam)
+    
+    # 定义输出的BAM文件名和按名称排序后的BAM文件名
+    OUTPUT_BAM="${BAM_DIR}${BASE_NAME}.bam"
+    SORTED_BAM_FILE="${BAM_DIR}${BASE_NAME}_sorted.bam"
+
+    # 按名称排序BAM文件
+    echo "Sorting ${OUTPUT_BAM} by name to ${SORTED_BAM_FILE}..."
+    samtools sort -n ${OUTPUT_BAM} -o ${SORTED_BAM_FILE}
+
+    # 强制重新创建BAM文件索引
+    echo "Indexing ${SORTED_BAM_FILE}..."
+    samtools index ${SORTED_BAM_FILE}
+    
+    echo "Processed ${SAM_FILE}: Converted to BAM, name-sorted, and indexed."
+done
+
+echo "All SAM files have been converted, name-sorted, and indexed."
+
 
