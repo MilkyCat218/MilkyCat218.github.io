@@ -79,19 +79,28 @@ echo "All SAM files have been converted to sorted and indexed BAM files."
 wget https://jaist.dl.sourceforge.net/project/subread/subread-1.6.2/subread-1.6.2-Linux-x86_64.tar.gz
 tar -zxvf  subread-1.6.2-Linux-x86_64.tar.gz
 cd subread-1.6.2-Linux-x86_64/bin
-./featureCounts -h
+echo 'PATH=$PATH:~/subread-1.6.2-Linux-x86_64/bin' >> ~/.bashrc
+source ~/.bashrc
 
 
 #featurecounts运行
 
 #!/bin/bash
-
 # 设置BAM文件目录和输出目录
-BAM_DIR="./smartseq/bam/"
-OUTPUT_DIR="./smartseq/featurecounts/"
-GTF_FILE="./genomic.gtf"
-
-# 运行featureCounts对BAM文件进行计数
+BAM_DIR="./smartseq/bam/" OUTPUT_DIR="./smartseq/featurecounts/" GTF_FILE="./genomic.gtf"
+# 检查BAM目录是否存在
+if [ ! -d "$BAM_DIR" ]; then
+    echo "Directory $BAM_DIR does not exist."
+    exit 1 
+fi
+# 使用 find 命令找到所有符合条件的 BAM 文件
+BAM_FILES=$(find ${BAM_DIR} -name '*_sorted.bam')
+# 检查是否找到了 BAM 文件
+if [ -z "$BAM_FILES" ]; then
+    echo "No BAM files found matching the pattern *_sorted.bam"
+    exit 1 
+fi
+# 运行 featureCounts 对找到的 BAM 文件进行计数
 featureCounts \
     -T 16 \
     -p \
@@ -99,7 +108,7 @@ featureCounts \
     -g gene_id \
     -a ${GTF_FILE} \
     -o ${OUTPUT_DIR}all_feature.txt \
-    ${BAM_DIR}*.bam
+    ${BAM_FILES}
+echo "FeatureCounts processing complete. Results are saved in ${OUTPUT_DIR}all_feature.txt"
 
-echo "FeatureCounts processing complete. Results are saved in ${OUTPUT_DIR}counts.txt"
 
