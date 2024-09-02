@@ -102,7 +102,7 @@ if [ -z "$BAM_FILES" ]; then
 fi
 # 运行 featureCounts 对找到的 BAM 文件进行计数
 featureCounts \
-    -T 16 \
+    -T 8 \
     -p \
     -t exon \
     -g gene_id \
