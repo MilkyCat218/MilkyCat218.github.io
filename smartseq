@@ -146,3 +146,67 @@ done
 echo "All SAM files have been converted, name-sorted, and indexed."
 
 
+
+#featurecounts使用
+library(tidyverse)
+library(data.table)
+setwd("E:/R/smartseq/")
+#### 对counts进行处理筛选得到表达矩阵 ####
+a1 <- fread('./all_feature.txt',
+              header = T,data.table = F)#载入counts，第一列设置为列名
+colnames(a1)
+counts <- a1[,7:ncol(a1)] #截取样本基因表达量的counts部分作为counts 
+rownames(counts) <- a1$Geneid #将基因名作为行名
+
+# 查找以 "_sorted.bam" 结尾的列名
+cols_to_remove <- grep("_sorted.bam$", colnames(counts))
+
+# 删除这些列
+counts <- counts[, -cols_to_remove]
+
+#更改样品名
+colnames(counts)
+colnames(counts) <- gsub('./smartseq/1/bam/','', #删除样品名前缀
++                          gsub('.bam','',  colnames(counts))) #删除样品名后缀
+
+metadata <- read.csv('./SraRunTable.txt')  # 替换为你的实际文件路径
+
+# 匹配 counts 的列名和元数据中的样本编号 (Run 列)
+metadata_ordered <- metadata[match(colnames(counts), metadata$Run), ]
+
+group_list <- paste(metadata_ordered$AGE, metadata_ordered$source_name, sep = "_")
+gl <- data.frame(row.names = colnames(counts), group_list = group_list)
+
+# 替换 postnatal day 30_Wild type cochlear inner hair cells 为 P30_WT IHC
+gl$group_list <- gsub("postnatal day 30_Wild type cochlear inner hair cells", "P30_WT IHC", gl$group_list)
+
+# 替换 postnatal day 14_Wild type cochlear inner hair cells 为 P14_WT IHC
+gl$group_list <- gsub("postnatal day 14_Wild type cochlear inner hair cells", "P14_WT IHC", gl$group_list)
+
+# 替换 postnatal day 14_induced OHCs (iOHCs) from the cochlear inner hair cells after Tbx2 deletion 为 P14_iOHC
+gl$group_list <- gsub("postnatal day 14_induced OHCs \\(iOHCs\\) from the cochlear inner hair cells after Tbx2 deletion", "P14_iOHC", gl$group_list)
+
+# 1. 提取分组信息
+group_list <- gl$group_list
+
+# 2. 为每个组生成递增的编号
+# ave() 函数生成组内递增编号
+sample_counts <- ave(group_list, group_list, FUN = seq_along)
+
+# 3. 拼接分组名和编号，形成新列名
+new_colnames <- paste(group_list, sample_counts, sep = "-")
+
+# 4. 替换 counts 矩阵的列名
+colnames(counts) <- new_colnames
+
+# 检查新列名是否已经正确替换
+head(colnames(counts))
+
+ # 5. 对新列名进行排序，确保同一组的样本排在一起
+> sorted_indices <- order(group_list)
+> 
+> # 6. 重新排序 counts 矩阵的列
+> counts_sorted <- counts[, sorted_indices]
+# 7. 重新排序 gl 数据框的行，保持与 counts_sorted 一致
+gl_sorted <- gl[sorted_indices, ]
+第七步没用
