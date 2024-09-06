@@ -210,3 +210,14 @@ head(colnames(counts))
 # 7. 重新排序 gl 数据框的行，保持与 counts_sorted 一致
 gl_sorted <- gl[sorted_indices, ]
 第七步没用
+
+
+##################以下为.sh文件内容
+gtf="gencode.vM25.chr_patch_hapl_scaff.annotation.gtf"
+### gene_id to gene_name
+grep 'gene_id' $gtf | awk -F 'gene_id \"' '{print $2}' |awk -F '\"' '{print $1}' >gene_id_tmp
+grep 'gene_id' $gtf | awk -F 'gene_name \"' '{print $2}' |awk -F '\"' '{print $1}' >gene_name_tmp
+paste gene_id_tmp gene_name_tmp >last_tmp
+uniq last_tmp >g2s_vm25_gencode.txt
+rm *_tmp
+
