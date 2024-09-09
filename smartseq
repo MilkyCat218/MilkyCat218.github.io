@@ -221,3 +221,40 @@ paste gene_id_tmp gene_name_tmp >last_tmp
 uniq last_tmp >g2s_vm25_gencode.txt
 rm *_tmp
 
+##python里更换geneid
+import pandas as pd
+
+# 读取 counts_sorted 和 g2s
+counts_sorted = pd.read_csv('counts_sorted.csv', index_col=0)  # 假设 counts_sorted 是保存为 CSV 文件
+g2s = pd.read_csv('g2s_vm20_gencode.txt', sep='\t', header=None, names=['geneid', 'symbol'])
+
+# 匹配 counts_sorted 的 geneid 和 g2s 中的 symbol
+counts_sorted['symbol'] = g2s.set_index('geneid').loc[counts_sorted.index, 'symbol']
+
+# 将 geneid 替换为 symbol
+counts_sorted.set_index('symbol', inplace=True)
+
+# 导出修改后的 counts_sorted
+counts_sorted.to_csv('counts_sorted_with_symbols.csv')
+
+### 从featurecounts 原始输出文件counts.txt中提取Geneid、Length(转录本长度)，计算tpm
+geneid_efflen <- subset(a1,select = c("Geneid","Length"))
+colnames(geneid_efflen) <- c("geneid","efflen")
+View(geneid_efflen)
+### 取出counts中geneid对应的efflen
+efflen <- geneid_efflen[match(rownames(counts),
+geneid_efflen$geneid),
+"efflen"]
+### 计算 TPM 公式
+#TPM (Transcripts Per Kilobase Million)  每千个碱基的转录每百万映射读取的Transcripts
+counts2TPM <- function(count=count, efflength=efflen){
+RPK <- count/(efflength/1000)   #每千碱基reads (Reads Per Kilobase) 长度标准化
+PMSC_rpk <- sum(RPK)/1e6        #RPK的每百万缩放因子 (“per million” scaling factor ) 深度标准化
+RPK/PMSC_rpk
+}
+
+tpm <- as.data.frame(apply(counts,2,counts2TPM))
+colSums(tpm)
+View(tpm)
+# 将 tpm 数据框导出为 CSV 文件
+write.csv(tpm, file = "tpm_output.csv", row.names = TRUE)
