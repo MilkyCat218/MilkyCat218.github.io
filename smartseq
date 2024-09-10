@@ -258,3 +258,13 @@ colSums(tpm)
 View(tpm)
 # 将 tpm 数据框导出为 CSV 文件
 write.csv(tpm, file = "tpm_output.csv", row.names = TRUE)
+
+# 读取CSV文件（不使用行名）
+counts_sorted_with_symbols <- read.csv("counts_sorted_with_symbols.csv", header = TRUE, sep = ",")
+
+# 对重复基因的表达值相加（以 symbol 为基准）
+counts_sorted_with_symbols <- aggregate(. ~ symbol, data = counts_sorted_with_symbols, FUN = sum)
+
+# 重新设置 symbol 作为行名
+rownames(counts_sorted_with_symbols) <- counts_sorted_with_symbols$symbol
+counts_sorted_with_symbols$symbol <- NULL
