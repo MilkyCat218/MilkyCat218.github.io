@@ -268,3 +268,133 @@ counts_sorted_with_symbols <- aggregate(. ~ symbol, data = counts_sorted_with_sy
 # 重新设置 symbol 作为行名
 rownames(counts_sorted_with_symbols) <- counts_sorted_with_symbols$symbol
 counts_sorted_with_symbols$symbol <- NULL
+
+#导入数据，有重复行怎么办？目前的解法是把行名先放在第一列，然后合并重复的，然后再把第一列放回行名
+#已导入数据，开始筛选
+# 感兴趣的基因
+gene3 <- c("Insm1", "Myo6", "Atoh1")
+
+# 确认基因是否都在 E16 中
+gene3 <- gene3[gene3 %in% rownames(E16)]
+
+# 筛选出这些基因对应的行
+E16G <- E16[gene3, ]
+
+# 保留这些基因在所有列中都大于0的列
+cols_to_keep3 <- colSums(E16G > 0) == length(gene3)
+
+# 筛选列并得到新的数据框
+E16F <- E16[, cols_to_keep3]
+
+# 查看结果
+head(E16F)
+
+#P1筛选
+# 感兴趣的基因
+gene4 <- c("Bcl11b", "Myo6", "Myo7a", "Atoh1")
+
+# 确认基因是否都在 P1 中
+gene4 <- gene4[gene4 %in% rownames(P1)]
+
+# 筛选出这些基因对应的行
+P1G <- P1[gene4, ]
+
+# 保留这些基因在所有列中都大于0的列
+cols_to_keep4 <- colSums(P1G > 0) == length(gene4)
+
+# 筛选列并得到新的数据框
+P1F <- P1[, cols_to_keep4]
+
+# 查看结果
+head(P1F)
+
+
+
+# 感兴趣的基因
+gene5 <- c("Slc26a5", "Myo6", "Ocm", "Ikzf2")
+
+# 确认基因是否都在 P7 中
+gene5 <- gene5[gene5 %in% rownames(P7)]
+
+# 筛选出这些基因对应的行
+P7G <- P7[gene5, ]
+
+# 保留这些基因在所有列中都大于0的列
+cols_to_keep5 <- colSums(P7G > 0) == length(gene5)
+
+# 筛选列并得到新的数据框
+P7F <- P7[, cols_to_keep5]
+
+# 查看结果
+head(P7F)
+
+#标准化
+library(Seurat)
+P14s <- CreateSeuratObject(counts = P14_iOHCF)
+P14s <- NormalizeData(object = P14s, normalization.method = "LogNormalize", scale.factor = 10000)
+P30s <- CreateSeuratObject(counts = P30)
+P30s <- NormalizeData(object = P30s, normalization.method = "LogNormalize", scale.factor = 10000)
+
+#把已经标准化的另外三个矩阵放到seurat的data插槽里边
+# 创建 Seurat 对象
+E16Fs <- CreateSeuratObject(counts = E16F, project = "E16F")
+# 确保将 E16F 转换为 Matrix 类型
+E16F_matrix <- as(E16F, "Matrix")
+E16Fs <- SetAssayData(object = E16Fs, slot = "data", new.data = E16F_matrix)
+
+P1Fs <- CreateSeuratObject(counts = P1F, project = "P1F")
+P1F_matrix <- as(P1F, "Matrix")
+P1Fs <- SetAssayData(object = P1Fs, slot = "data", new.data = P1F_matrix) #然后换成P7再来一遍
+
+reference.list <- list(P14s, P30s, E16Fs, P1Fs, P7Fs)
+anchors <- FindIntegrationAnchors(object.list = reference.list, anchor.features = 2000, dims = 1:20)
+integrated_seurat <- IntegrateData(anchorset = anchors, k.weight = 40) #默认kweight一百，因为细胞数太少了所以减小到40
+
+DefaultAssay(integrated_seurat)
+[1] "integrated"
+# 提取表达矩阵
+expression_matrix <- GetAssayData(integrated_seurat, slot = "data")
+
+# 提取元数据
+cell_metadata <- integrated_seurat@meta.data
+
+# 提取特征数据（即基因信息）
+gene_metadata <- data.frame(gene_short_name = rownames(expression_matrix))
+rownames(gene_metadata) <- rownames(expression_matrix)
+
+cds <- new_cell_data_set(expression_matrix,
+                          cell_metadata = cell_metadata,
+                          gene_metadata = gene_metadata)
+
+# 假设你已经有不同矩阵的列名
+cell_names_P1 <- colnames(P1F)
+cell_names_P7 <- colnames(P7F)
+cell_names_P14 <- colnames(P14_iOHCF)
+cell_names_E16 <- colnames(E16F)
+cell_names_P30 <- colnames(P30)
+
+# 为每个细胞类型创建一个元数据框
+metadata <- data.frame(row.names = colnames(cds),
+                       cell_type = rep(NA, ncol(cds)))
+
+# 为每个矩阵分配细胞类型
+metadata[cell_names_P1, "cell_type"] <- "P1"
+metadata[cell_names_P7, "cell_type"] <- "P7"
+metadata[cell_names_P14, "cell_type"] <- "P14"
+metadata[cell_names_E16, "cell_type"] <- "E16"
+metadata[cell_names_P30, "cell_type"] <- "P30"
+
+# 将元数据添加到cds对象中
+colData(cds)$cell_type <- metadata$cell_type
+
+# 检查cell_type列
+table(colData(cds)$cell_type)
+
+cds <- preprocess_cds(cds, num_dim = 50, norm_method = "none")
+
+#主成分可视化
+plot_pc_variance_explained(cds)
+
+cds <- reduce_dimension(cds,
+                        core = 8, 
+                        umap.fast_sgd = F)（设置成T可加速）
