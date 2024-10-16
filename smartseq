@@ -74,6 +74,15 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
 done
 
 echo "All SAM files have been converted to sorted and indexed BAM files."
+#遇到的问题：text busy  解决方法：发现赋予权限时路径输错了
+#遇到的问题：./P7_OHC/samtobam.sh: line 4: $'\r': command not found
+#./P7_OHC/samtobam.sh: line 7: $'\r': command not found
+#./P7_OHC/samtobam.sh: line 9: syntax error near unexpected token `$'do\r''
+#./P7_OHC/samtobam.sh: line 9: `for SAM_FILE in ${SAM_DIR}*.sam; do
+解决方法：sed -i 's/\r//' ./P7_OHC/samtobam.sh   换行符问题
+#遇到的问题： NO_COOR reads not in a single block at the end 16 -1
+#samtools index: failed to create index for "./P7_OHC/bam/230401-lib_sorted.bam" 解决方法：不用索引
+
 
 安装feature counts
 wget https://jaist.dl.sourceforge.net/project/subread/subread-1.6.2/subread-1.6.2-Linux-x86_64.tar.gz
