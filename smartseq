@@ -92,7 +92,7 @@ echo 'PATH=$PATH:~/subread-1.6.2-Linux-x86_64/bin' >> ~/.bashrc
 source ~/.bashrc
 
 
-#featurecounts运行
+#featurecounts运行 使用 gencode下载基因组注释文件
 
 #!/bin/bash
 # 设置BAM文件目录和输出目录
@@ -145,7 +145,7 @@ for SAM_FILE in ${SAM_DIR}*.sam; do
     echo "Sorting ${OUTPUT_BAM} by name to ${SORTED_BAM_FILE}..."
     samtools sort -n ${OUTPUT_BAM} -o ${SORTED_BAM_FILE}
 
-    # 强制重新创建BAM文件索引
+    # 强制重新创建BAM文件索引（不需要这一步！！！）
     echo "Indexing ${SORTED_BAM_FILE}..."
     samtools index ${SORTED_BAM_FILE}
     
@@ -156,7 +156,7 @@ echo "All SAM files have been converted, name-sorted, and indexed."
 
 
 
-#featurecounts使用
+#featurecounts
 library(tidyverse)
 library(data.table)
 setwd("E:/R/smartseq/")
