@@ -156,7 +156,7 @@ echo "All SAM files have been converted, name-sorted, and indexed."
 
 
 
-#featurecounts
+#featurecounts之后用r处理得到表达量矩阵
 library(tidyverse)
 library(data.table)
 setwd("E:/R/smartseq/")
@@ -167,16 +167,59 @@ colnames(a1)
 counts <- a1[,7:ncol(a1)] #截取样本基因表达量的counts部分作为counts 
 rownames(counts) <- a1$Geneid #将基因名作为行名
 
-# 查找以 "_sorted.bam" 结尾的列名
-cols_to_remove <- grep("_sorted.bam$", colnames(counts))
 
-# 删除这些列
-counts <- counts[, -cols_to_remove]
+colnames(counts) <- gsub('./P1_OHC/bam/', '',  # 删除样品名前缀
+                         gsub('_sorted.bam', '', colnames(counts)))  # 删除样品名后缀
 
-#更改样品名
-colnames(counts)
-colnames(counts) <- gsub('./smartseq/1/bam/','', #删除样品名前缀
-+                          gsub('.bam','',  colnames(counts))) #删除样品名后缀
+
+# 合并加测细胞：
+# 合并 764 和 764plus
+counts$`764` <- counts$`764` + counts$`764plus`
+
+# 合并 761 和 761plus
+counts$`761` <- counts$`761` + counts$`761plus`
+
+# 删除原始的 764plus 和 761plus 列
+counts <- counts[, !(colnames(counts) %in% c("764plus", "761plus"))]
+
+# 查看合并后的数据框
+head(counts)
+
+#替换基因id为基因名称
+g2s <- fread('g2s_vm25_gencode.txt',header = F,data.table = F) #载入从gencode的gtf文件中提取的信息文件
+colnames(g2s) <- c("geneid","symbol")
+  
+symbol <- g2s[match(rownames(counts),g2s$geneid),"symbol"] #匹配counts行名对应的symbol
+table(duplicated(symbol))
+#FALSE  TRUE 
+#55492   770 
+  
+##使用aggregate根据symbol列中的相同基因进行合并 
+counts <- aggregate(counts, by=list(symbol), FUN=sum)
+counts <- column_to_rownames(counts,'Group.1')
+dim(counts)
+#[1] 55492     4
+
+# 按列名从小到大排序
+counts <- counts[, order(as.numeric(colnames(counts)))]
+
+# 导出表达量矩阵
+# 加载writexl包，如果尚未安装请先安装
+# install.packages("writexl")
+library(writexl)
+
+# 将行名变为第一列，并保持原始列名（避免自动添加前缀）
+counts_export <- data.frame(Gene = rownames(counts), counts, check.names = FALSE)
+
+# 导出为Excel文件
+write_xlsx(counts_export, "counts.xlsx")
+
+# 提示文件已导出
+cat("counts 矩阵已导出为 counts.xlsx\n")
+
+
+
+
 
 metadata <- read.csv('./SraRunTable.txt')  # 替换为你的实际文件路径
 
